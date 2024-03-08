@@ -1,6 +1,7 @@
 import AppError from '../utils/error.util.js';
 import User from "../models/user.model.js";
-import user from '../models/user.model.js';
+import cloudinary from "cloudinary";
+import fs from 'fs/promises'
 
 const cookieOptions = {
     maxAge: 7 * 24 * 60 * 60 * 100,
@@ -11,7 +12,8 @@ const cookieOptions = {
 const register = async (req, res, next) =>{
 
     //getting the required data from the req.body that is defined in schema
-    const {fullName, email, password} = req.body;
+    try {
+        const {fullName, email, password} = req.body;
 
     if(!fullName || !email || !password){
         //Created a custom middleware that throw new error as per message and status code
@@ -31,7 +33,7 @@ const register = async (req, res, next) =>{
         password,
         avatar : {
             public_id : email,
-            secure_url : 'https://images.unsplash.com/photo-1682688759350-050208b1211c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+            secure_url : process.env.CLOUDINARY_URL
         }
     });
 
@@ -40,6 +42,29 @@ const register = async (req, res, next) =>{
     }
      
     // TODO -> File Upload
+   
+    console.log("file Details > ", JSON.stringify(req.file));
+
+    if(req.file){
+        try {
+            
+            const result = await cloudinary.v2.uploader.upload(req.file.path, {
+                folder : 'lms',
+                width : 250,
+                height : 250,
+                gravity : 'faces',
+                crop : 'fill'
+            });
+            if(result){
+                user.avatar.public_id = result.public_id;
+                user.avatar.secure_url = result.secure_url;
+
+                // fs.rm(`upload/${req.file.filename}`)
+            }
+        } catch (error) {
+            return next(new AppError(error || "File not uploaded", 500))
+        }
+    }
 
     await user.save();
 
@@ -55,6 +80,12 @@ const register = async (req, res, next) =>{
         message : 'User Registered Successfully',
         user,
     })
+    } catch (error) {
+        res.status(400).json({
+            success : false,
+            message: error.message
+        })
+    }
 }
 
 const login = async (req, res, next) =>{
@@ -80,10 +111,8 @@ const login = async (req, res, next) =>{
         });
         
     } catch (error) {   
-        return next(new AppError(error.message, 400));
+        return next(new AppError("Error While Logging in ", 400));
     }
-   
-
 }
 
 const logout = (req, res) => {
