@@ -1,11 +1,12 @@
 import express from 'express';
 import cookieParser from 'cookie-parser'
 import cors  from 'cors'
-import { config } from 'dotenv';
 import morgan from 'morgan';
 import userRoute from './routes/userRoutes.js'
+import courseRoute from './routes/course.routes.js'
 import errorMiddleware from './middlewares/error.middlewares.js'
-import upload from './middlewares/multer.middleware.js';
+// import upload from './middlewares/multer.middleware.js';
+
 const app = express();
 
 app.use(express.json()); 
@@ -28,6 +29,9 @@ app.use('/home', (req, res) => {
 // })
 
 app.use('/api/v1/user', userRoute);
+app.use('/api/v1/courses', courseRoute);
+
+app.use(express.urlencoded({extended: true}));
 
 app.use(errorMiddleware);
 
