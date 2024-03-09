@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 import morgan from 'morgan';
 import userRoute from './routes/userRoutes.js'
 import errorMiddleware from './middlewares/error.middlewares.js'
+import upload from './middlewares/multer.middleware.js';
 const app = express();
 
 app.use(express.json()); 
