@@ -87,7 +87,7 @@ userSchema.methods = {
 
         return resetToken;
     } 
-
+ 
 }
 
 
